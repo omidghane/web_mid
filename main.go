@@ -1,31 +1,43 @@
 package main
 
 import (
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/farhad-aman/cart-web-midterm/database"
 	"github.com/farhad-aman/cart-web-midterm/handlers"
 	"github.com/farhad-aman/cart-web-midterm/middlewares"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/go-playground/validator.v9"
 )
 
+
 func main() {
-	handlers.InitValidator()
-
+	connectDB()
+	
 	e := echo.New()
-
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	database.Connect()
+	database.connectDB()
 
-	e.POST("/users/register", handlers.RegisterUser)
-	e.POST("/users/login", handlers.LoginUser)
+	e.POST("/login", handlers.Login)
+	e.POST("/signup", handlers.Signup)
 
-	e.POST("/basket", handlers.CreateBasket, middlewares.JWTMiddleware)
-	e.GET("/basket", handlers.GetAllBaskets, middlewares.JWTMiddleware)
-	e.GET("/basket/:id", handlers.GetBasket, middlewares.JWTMiddleware)
-	e.PATCH("/basket/:id", handlers.UpdateBasket, middlewares.JWTMiddleware)
-	e.DELETE("/basket/:id", handlers.DeleteBasket, middlewares.JWTMiddleware)
+	authorized := e.Group("/auth", JWTMiddleware)
+	{
+		authorized.GET("/basket", handlers.GetBaskets, middlewares.JWTMiddleware)
+		authorized.POST("/basket", handlers.CreateBasket, middlewares.JWTMiddleware)
+		authorized.PATCH("/basket/:id", handlers.UpdateBasket, middlewares.JWTMiddleware)
+		authorized.GET("/basket/:id", handlers.GetBasket, middlewares.JWTMiddleware)
+		authorized.DELETE("/basket/:id", handlers.DeleteBasket, middlewares.JWTMiddleware	)
+	}
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Start(":8080")
 }

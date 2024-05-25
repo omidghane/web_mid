@@ -14,90 +14,83 @@ func validState(fl validator.FieldLevel) bool {
 	return state == "PENDING" || state == "COMPLETED"
 }
 
+func GetBaskets(c echo.Context) error {
+	userID := c.Get("userID").(uint)
+	var baskets []models.Basket
+	database.db.Where("user_id = ?", userID).Find(&baskets)
+	return c.JSON(http.StatusOK, baskets)
+}
+
 func CreateBasket(c echo.Context) error {
-	userID := GetUserIDFromContext(c)
-	basketInput := new(models.BasketInput)
-	if err := c.Bind(basketInput); err != nil {
-		return err
+	userID := c.Get("userID").(uint)
+	var input models.BasketInput
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	if err := validate.Struct(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
 	basket := models.Basket{
 		UserID: userID,
-		Data:   basketInput.Data,
-		State:  basketInput.State,
+		Data:   input.Data,
+		State:  input.State,
 	}
 
-	if err := validate.Struct(&basket); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	result := database.DB.Create(&basket)
-	if result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, result.Error)
-	}
-
-	return c.JSON(http.StatusCreated, basket)
-}
-
-func UpdateBasket(c echo.Context) error {
-	userID := GetUserIDFromContext(c)
-	basketID, _ := strconv.Atoi(c.Param("id"))
-
-	var existingBasket models.Basket
-	if err := database.DB.Where("user_id = ? AND id = ?", userID, basketID).First(&existingBasket).Error; err != nil {
-		return c.JSON(http.StatusNotFound, "Basket not found")
-	}
-
-	if existingBasket.State == "COMPLETED" {
-		return c.JSON(http.StatusForbidden, "Cannot update a completed basket")
-	}
-
-	basketInput := new(models.BasketInput)
-	if err := c.Bind(basketInput); err != nil {
-		return err
-	}
-
-	existingBasket.Data = basketInput.Data
-	existingBasket.State = basketInput.State
-
-	if err := validate.Struct(&existingBasket); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	database.DB.Save(&existingBasket)
-	return c.JSON(http.StatusOK, existingBasket)
-}
-
-func GetAllBaskets(c echo.Context) error {
-	userID := GetUserIDFromContext(c)
-	var baskets []models.Basket
-	result := database.DB.Where("user_id = ?", userID).Find(&baskets)
-	if result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, result.Error)
-	}
-
-	return c.JSON(http.StatusOK, baskets)
-}
-
-func GetBasket(c echo.Context) error {
-	userID := GetUserIDFromContext(c)
-	basketID, _ := strconv.Atoi(c.Param("id"))
-	var basket models.Basket
-	result := database.DB.Where("user_id = ? AND id = ?", userID, basketID).First(&basket)
-	if result.Error != nil {
-		return c.JSON(http.StatusNotFound, "Basket not found")
+	if err := database.db.Create(&basket).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, basket)
 }
 
-func DeleteBasket(c echo.Context) error {
-	userID := GetUserIDFromContext(c)
-	basketID, _ := strconv.Atoi(c.Param("id"))
+func UpdateBasket(c echo.Context) error {
+	userID := c.Get("userID").(uint)
+	id := c.Param("id")
 	var basket models.Basket
-	if err := database.DB.Where("user_id = ? AND id = ?", userID, basketID).Delete(&basket).Error; err != nil {
-		return c.JSON(http.StatusNotFound, "Basket not found")
+	if err := database.db.Where("id = ? AND user_id = ?", id, userID).First(&basket).Error; err != nil {
+		return c.JSON(http.StatusNotFound, gin.H{"error": "basket not found"})
+	}
+	if basket.State == "COMPLETED" {
+		return c.JSON(http.StatusForbidden, gin.H{"error": "cannot modify a completed basket"})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Basket deleted"})
+	var input models.BasketInput
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	if err := validate.Struct(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	basket.Data = input.Data
+	basket.State = input.State
+	basket.UpdatedAt = time.Now()
+
+	if err := database.db.Save(&basket).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, basket)
+}
+
+func GetBasket(c echo.Context) error {
+	userID := c.Get("userID").(uint)
+	id := c.Param("id")
+	var basket models.Basket
+	if err := database.db.Where("id = ? AND user_id = ?", id, userID).First(&basket).Error; err != nil {
+		return c.JSON(http.StatusNotFound, gin.H{"error": "basket not found"})
+	}
+	return c.JSON(http.StatusOK, basket)
+}
+
+func DeleteBasket(c echo.Context) error {
+	userID := c.Get("userID").(uint)
+	id := c.Param("id")
+	if err := database.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Basket{}).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, gin.H{"message": "basket deleted"})
 }

@@ -8,51 +8,46 @@ import (
 	"net/http"
 	"strings"
 )
-
-func RegisterUser(c echo.Context) error {
-	user := new(models.User)
-	if err := c.Bind(user); err != nil {
-		return err
+func Signup(c echo.Context) error {
+	var user User
+	if err := c.Bind(&user); err != nil {
+		return c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	if err := validate.Struct(user); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+	if err := validate.Struct(&user); err != nil {
+		return c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
 	if err := user.HashPassword(user.Password); err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to hash password")
+		return c.JSON(http.StatusInternalServerError, gin.H{"error": "could not hash password"})
 	}
 
-	result := database.DB.Create(&user)
-	if result.Error != nil {
-		if strings.Contains(result.Error.Error(), "duplicate key value") {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Username already exists"})
-		}
-		return c.JSON(http.StatusInternalServerError, result.Error.Error())
+	if err := db.Create(&user).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusCreated, user)
+	return c.JSON(http.StatusOK, gin.H{"message": "signup successful"})
 }
 
-func LoginUser(c echo.Context) error {
-	credentials := new(models.User)
-	if err := c.Bind(credentials); err != nil {
-		return err
+func Login(c echo.Context) error {
+	var input User
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	var user models.User
-	database.DB.Where("username = ?", credentials.Username).First(&user)
-
-	if user.ID == 0 || user.CheckPassword(credentials.Password) != nil {
-		return c.JSON(http.StatusUnauthorized, "Incorrect username or password")
+	var user User
+	if err := db.Where("username = ?", input.Username).First(&user).Error; err != nil {
+		return c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 	}
 
-	token, err := utils.GenerateToken(user.ID)
+	if err := user.CheckPassword(input.Password); err != nil {
+		return c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+	}
+
+	token, err := GenerateToken(user.ID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to generate token")
+		return c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{
-		"token": token,
-	})
+	return c.JSON(http.StatusOK, gin.H{"token": token})
 }

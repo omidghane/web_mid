@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/omidghane/web-midterm/web-midterm/database"
-	"github.com/omidghane/web-midterm/web-midterm/models"
+	"github.com/omidghane/web_midterm/web_midterm/database"
+	"github.com/omidghane/web_midterm/web_midterm/models"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"net/http"

@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/omidghane/web-midterm/web-midterm/database"
-	"github.com/omidghane/web-midterm/web-midterm/handlers"
-	"github.com/omidghane/web-midterm/web-midterm/middlewares"
+	"github.com/omidghane/web_midterm/web_midterm/database"
+	"github.com/omidghane/web_midterm/web_midterm/handlers"
+	"github.com/omidghane/web_midterm/web_midterm/middlewares"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"golang.org/x/crypto/bcrypt"
@@ -39,5 +39,6 @@ func main() {
 		authorized.DELETE("/basket/:id", handlers.DeleteBasket, middlewares.JWTMiddleware	)
 	}
 
+	
 	e.Start(":8080")
 }

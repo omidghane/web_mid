@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"github.com/omidghane/web-midterm/web-midterm/utils"
+	"github.com/omidghane/web_midterm/web_midterm/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"

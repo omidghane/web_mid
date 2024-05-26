@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"github.com/farhad-aman/cart-web-midterm/utils"
+	"github.com/omidghane/web-midterm/web-midterm/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"

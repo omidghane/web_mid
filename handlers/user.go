@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"github.com/farhad-aman/cart-web-midterm/database"
-	"github.com/farhad-aman/cart-web-midterm/models"
-	"github.com/farhad-aman/cart-web-midterm/utils"
+	"github.com/omidghane/web-midterm/web-midterm/database"
+	"github.com/omidghane/web-midterm/web-midterm/models"
+	"github.com/omidghane/web-midterm/web-midterm/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"

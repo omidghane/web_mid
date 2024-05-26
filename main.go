@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/farhad-aman/cart-web-midterm/database"
-	"github.com/farhad-aman/cart-web-midterm/handlers"
-	"github.com/farhad-aman/cart-web-midterm/middlewares"
+	"github.com/omidghane/web-midterm/web-midterm/database"
+	"github.com/omidghane/web-midterm/web-midterm/handlers"
+	"github.com/omidghane/web-midterm/web-midterm/middlewares"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"

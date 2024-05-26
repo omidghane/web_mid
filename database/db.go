@@ -3,7 +3,7 @@ package database
 import (
 
 
-	"github.com/farhad-aman/cart-web-midterm/models"
+	"github.com/omidghane/web-midterm/web-midterm/models"
 	"github.com/jinzhu/gorm"
 	"gopkg.in/go-playground/validator.v9"
 )

@@ -1,32 +1,18 @@
 package database
 
 import (
-
-
-	"github.com/omidghane/web_mid/models"
 	"github.com/jinzhu/gorm"
-	"gopkg.in/go-playground/validator.v9"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/omidghane/web_mid/models"
 )
 
-var db *gorm.DB
-var validate *validator.Validate
+var DB *gorm.DB
 
-func connectDB(){
+func Init() {
 	var err error
-	db, err = gorm.Open("sqlite3", "shoppingcart.db")
+	DB, err = gorm.Open("sqlite3", "shoppingcart.db")
 	if err != nil {
 		panic("failed to connect database")
 	}
-	defer db.Close()
-
-	db.AutoMigrate(&models.User{}, &models.Basket{})
-
-	validate = validator.New()
-	validate.RegisterValidation("customState", func(fl validator.FieldLevel) bool {
-		state := fl.Field().String()
-		return state == "COMPLETED" || state == "PENDING"
-	})
-
+	DB.AutoMigrate(&models.User{}, &models.Basket{})
 }
-
-
